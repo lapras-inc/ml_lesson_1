@@ -2,6 +2,9 @@
 
 from janome.tokenizer import Tokenizer
 from nltk.probability import LidstoneProbDist
+
+# バージョンアップによりnltk からNgramModelが削除されてしまったので、
+# NgramModelの部分だけ抽出したnltkxライブラリをファイル内に入れて読み込む
 from nltkx import NgramModel
 
 NEWLINE = "\n"
@@ -28,6 +31,22 @@ def tokenize(text):
     pass
 
 
+def train_model(corpus_path, n=2):
+    """
+    corpus_path(str)に指定されたファイルのテキストから言語モデルを学習し、n-gramで学習してモデルオブジェクトを返す
+    """
+
+    estimator = lambda fdist, bins: LidstoneProbDist(fdist, 0.2)
+
+    # ヒント
+    # >>> model = NgramModel(n, words, estimator)
+    # で、NgramModelオブジェクトが学習＆生成される。
+    # words(list of str) は訓練データとなる文を、単語ごとに切ったもの。
+    # estimatorは、Smoothing(平滑化)といって、1度も出ていない単語の出現確率を他の単語から推定する手法のための推定器で、ここではおまじないと考えて良い
+
+    return model
+
+
 def per_word_cross_entropy(model, text):
     """
     model(NgramModel)とtext(str)をとり、modelにおけるtextのper-word クロスエントロピー(float)を返す
@@ -50,32 +69,45 @@ def get_average_entropy(model, corpus_path, max_lines_to_load=-1):
     pass
 
 
-def train_model(corpus_path, n=2):
+def is_same_author(model_corpus_path, target_corpus_path, n=2, threshold=5.0):
     """
-    corpus_path(str)に指定されたファイルのテキストから言語モデルを学習し、n-gramで学習してモデルオブジェクトを返す
+    target_corpus_path(str)に指定されたファイルの文章が、model_corpus_path(str)の著者のものだと推定されればTrueを返す
+    thresholdは、その著者と判定するためのエントロピーの閾値
+    nは、モデルのgram数
     """
 
-    estimator = lambda fdist, bins: LidstoneProbDist(fdist, 0.2)
+    pass
 
-    # ヒント
-    # >>> model = NgramModel(n, words, estimator)
-    # で、NgramModelオブジェクトが学習＆生成される。
-    # words(list of str) は訓練データとなる文を、単語ごとに切ったもの。
-    # estimatorは、Smoothing(平滑化)といって、1度も出ていない単語の出現確率を他の単語から推定する手法のための推定器で、ここではおまじないと考えて良い
-
-    return model
 
 if __name__ == "__main__":
-    n = 4
-    max_lines_to_load = 60
 
-    # 宮沢賢治 銀河鉄道の夜を学習して言語モデルをつくる
-    model = train_model("./corpus/kenji_ginga.txt", n)
+    def test_get_average_entropy():
+        n = 4
+        max_lines_to_load = 60
 
-    print("宮沢賢治 / 注文の多い料理店: {0}".format(get_average_entropy(model, "./corpus/kenji_ryoriten.txt", max_lines_to_load)))
-    print("宮沢賢治 / 風の又三郎: {0}".format(get_average_entropy(model, "./corpus/kenji_matasaburo.txt", max_lines_to_load)))
-    print("宮沢賢治 / ツェねずみ: {0}".format(get_average_entropy(model, "./corpus/kenji_tsuenezumi.txt", max_lines_to_load)))
-    print("太宰治 / 走れメロス: {0}".format(get_average_entropy(model, "./corpus/dazai_melos.txt", max_lines_to_load)))
-    print("森鴎外 / あそび: {0}".format(get_average_entropy(model, "./corpus/ogai_asobi.txt", max_lines_to_load)))
-    print("夏目漱石 / こころ: {0}".format(get_average_entropy(model, "./corpus/soseki_kokoro.txt", max_lines_to_load)))
-    print("夏目漱石 / 道草: {0}".format(get_average_entropy(model, "./corpus/soseki_michikusa.txt", max_lines_to_load)))
+        # 宮沢賢治 銀河鉄道の夜を学習して言語モデルをつくる
+        model = train_model("./corpus/kenji_ginga.txt", n)
+
+        # 各小説の平均エントロピーをprintする
+        print("宮沢賢治 / 注文の多い料理店: {0}".format(get_average_entropy(model, "./corpus/kenji_ryoriten.txt", max_lines_to_load)))
+        print("宮沢賢治 / 風の又三郎: {0}".format(get_average_entropy(model, "./corpus/kenji_matasaburo.txt", max_lines_to_load)))
+        print("宮沢賢治 / ツェねずみ: {0}".format(get_average_entropy(model, "./corpus/kenji_tsuenezumi.txt", max_lines_to_load)))
+        print("太宰治 / 走れメロス: {0}".format(get_average_entropy(model, "./corpus/dazai_melos.txt", max_lines_to_load)))
+        print("森鴎外 / あそび: {0}".format(get_average_entropy(model, "./corpus/ogai_asobi.txt", max_lines_to_load)))
+        print("夏目漱石 / こころ: {0}".format(get_average_entropy(model, "./corpus/soseki_kokoro.txt", max_lines_to_load)))
+        print("夏目漱石 / 道草: {0}".format(get_average_entropy(model, "./corpus/soseki_michikusa.txt", max_lines_to_load)))
+
+
+    def test_is_same_author():
+        n = 4
+        threshold = 5.0
+
+        # 「銀河鉄道の夜」と「注文の多い料理店」の著者は同じか？
+        print(is_same_author("./corpus/kenji_ginga.txt", "./corpus/kenji_ryoriten.txt", n, threshold))
+
+        # 「銀河鉄道の夜」と「あそび」の著者は同じか？
+        print(is_same_author("./corpus/kenji_ginga.txt", "./corpus/ogai_asobi.txt", n, threshold))
+
+
+    # test_get_average_entropy()
+    # test_is_same_author()
