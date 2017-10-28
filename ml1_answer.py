@@ -40,20 +40,7 @@ def train_model(corpus_path, n=2):
     """
 
     estimator = lambda fdist, bins: LidstoneProbDist(fdist, 0.2)
-
-    text = open_corpus(corpus_path)
-    words = tokenize(text)
-
-    model = NgramModel(n, words, estimator)
-
-    return model
-
-
-def per_word_cross_entropy(model, text):
-    """
-    model(NgramModel)とtext(str)をとり、modelにおけるtextのper-word クロスエントロピー(float)を返す
-    """
-
+    
     tokens = tokenize(text)
     return model.entropy(tokens) / len(tokens)
 
