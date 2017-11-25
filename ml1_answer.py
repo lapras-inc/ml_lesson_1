@@ -89,7 +89,7 @@ def is_same_author(model_corpus_path, target_corpus_path, n=2, threshold=5.0):
 if __name__ == "__main__":
 
     def test_get_average_entropy():
-        n = 7
+        n = 6
         max_lines_to_load = 60
 
         # 宮沢賢治 銀河鉄道の夜を学習して言語モデルをつくる
@@ -118,5 +118,5 @@ if __name__ == "__main__":
         print(is_same_author("./corpus/kenji_ginga.txt", "./corpus/ogai_asobi.txt", n, threshold))
 
 
-    # test_get_average_entropy()
-    # test_is_same_author()
+    test_get_average_entropy()
+    test_is_same_author()
